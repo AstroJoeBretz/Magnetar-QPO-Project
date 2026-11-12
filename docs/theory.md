@@ -129,5 +129,5 @@ mode-amplitude formula (agreement to 6 digits).
 * General-time residue solution (40 Heaviside-conditioned terms), needed for exterior energy
   deposition at early times and for interior fields near the origin (`ContourOriginDivergence.nb`).
 * Beaming maps (`AnalyzeSimulationData.nb`, 3-D mean-amplitude plots).
-* The 2016 power-spectrum data in `archived_code/` came from an earlier model without a coupled
-  magnetosphere; no generating code survives, so they are archived only.
+* The 2016 power-spectrum data (kept locally, not in this repository) came from an earlier model
+  without a coupled magnetosphere; no generating code survives, so they are not used.

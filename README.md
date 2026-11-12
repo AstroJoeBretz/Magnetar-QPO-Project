@@ -23,6 +23,8 @@ of the Royal Astronomical Society (`CITATION.cff`; the DOI still needs to be fil
 ## Install and test
 
 ```bash
+git clone https://github.com/AstroJoeBretz/Magnetar-QPO-Project.git
+cd Magnetar-QPO-Project
 pip install -e ".[dev]"
 pytest              # fast tests
 pytest -m slow      # full-precision checks (set QPO_LEGACY_DIR to compare with the old tables)
@@ -58,10 +60,12 @@ spec = mode_spectrum(sol)          # frequency [Hz], decay rate [1/s], amplitude
 - `scripts/` – table generation, legacy-table converter and audit.
 - `tests/` – unit tests and cross-checks against independent calculations.
 
-## `archived_code/`
+## Original Mathematica code
 
-Read-only legacy material, not used by the package:
+The original notebooks and the Mathematica-computed eigenvalue tables are archived (read-only) at
+<https://github.com/AstroJoeBretz/QPO-Project>. They are not needed to use this package;
+`docs/theory.md` records the discrepancies and defects found when porting them.
 
-- `ExtraModes.nb` (2020) – finder for the complex type-II modes using hand-fitted seeds.
-- `SurprisePoles.nb` (2019) – pole scans for exterior speed ratios c2 < 1 and small μ2.
-- `Power Spectra Data/` (2016) – ℓ × n amplitude matrices from an earlier version of the model.
+A few older items recovered from a failed laptop are not published anywhere: `ExtraModes.nb`
+(type-II mode finder), `SurprisePoles.nb` (pole scans for exterior speed ratios c2 < 1) and 2016
+power-spectrum data from an earlier version of the model. They are kept locally by the author.
