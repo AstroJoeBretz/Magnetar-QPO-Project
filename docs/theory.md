@@ -63,53 +63,6 @@ Validated against direct integration over real frequency (`tests/test_residue_so
 `~1e-5` relative, limited by the truncation of both sums), and against the paper's Lorentzian
 mode-amplitude formula (agreement to 6 digits).
 
-## Points where the original notebooks disagree (resolved here)
-
-1. **Mirror-pole factor.** One notebook cell uses `a_{-n} = conj(a_n)`, another `(-1)^l conj(a_n)`.
-   Here every pole, including `-conj(w)`, is evaluated directly; the field comes out real
-   (`|Im F| ~ 1e-18`), so no symmetry factor is assumed.
-2. **Factor 1/2 on the exterior overlap.** The notebook `ab` drops the `1/2` of
-   `w_> = (A h1 + B h2)/2`. The derivation above (and agreement with direct integration) fixes it.
-3. **`c_<` vs `c_>`** in the paper's exterior overlap integral: the exterior argument uses `c_>`.
-4. **Polar profile of the initial condition.** Any field `u = -curl(Psi r)` with
-   `Psi = f_r(r) Theta(theta) Phi(phi)` has `u_phi = f_r Theta' Phi`,
-   `u_theta = -f_r Theta Phi'/sin(theta)` and is divergence-free. The paper's eq. (IC) corresponds to
-   `Theta = f_theta'`, `Phi = f_phi'`, with `f_theta = sin^2(theta) G(theta)`, i.e.
-   `Theta_paper = sin(2 theta) G + sin^2(theta) G'`. The figure-producing notebooks
-   (`DisplacmentVsFrequency.nb`) use `Theta_nb = sin^2(theta) G'`. They differ by
-   `Theta_paper - Theta_nb = sin(2 theta) G(theta)`, about `2 sigma_theta^2` of `Theta_nb` near the
-   equator. Both are odd about `theta = pi/2`, so both have zero angular momentum. After normalising
-   to the same strain energy the mode spectra agree to within 3% (identical frequencies and
-   strongest modes), so the choice is immaterial. `InitialCondition(profile="paper")` is the default
-   (it is the paper's eq. IC, term by term); `profile="notebook"` reproduces the recovered notebook.
-   The notebooks were recovered from a failed laptop and may be incomplete, which is another reason
-   to follow the paper. The axisymmetric field uses the paper's form.
-5. **Energy normalisation (a deliberate rounding).** The field of amplitude `a` (in units of R*) has
-   strain energy `E = E_unit a^2 E_strain`, where `E_strain` is the dimensionless separable strain
-   energy (`energy.strain_energy`) and `E_unit = mu1 R*^3`. The original notebooks use the rounded
-   value `E_unit = 1e47 erg`; the literal `mu1 = <B_t^2>/4 pi` with `B_t = 2.3e15 G`, `R* = 10 km`
-   would give `4.2e47 erg`. The difference is intentional rounding within the physical
-   uncertainty of `B_t` and `R*`: amplitudes scale as `E_unit^(-1/2)` (a factor ~2), which is
-   immaterial because 0.01 R* is an order-of-magnitude detectability criterion, not a sharp
-   threshold, and the conclusions (which modes are excited, frequencies, energy having to straddle
-   the surface) do not depend on it. `1e47` is the default and reproduces the published figures;
-   pass `E_unit_erg` / `--energy-unit` to use another value.
-6. **Alfven luminosity angular weight.** The notebook squares `a_lm`; orthogonality of the toroidal
-   harmonics gives `|a_lm|^2`, which is used here.
-7. The strain energy of exterior deposits is weighted by `mu2` (the notebook weights by `mu1`).
-
-## Defects found in the legacy eigenvalue tables
-
-`scripts/audit_legacy_eigenvalues.py` checks every stored root against `D_l`:
-
-* All seven `evalues*` tables agree with this package to the stored 64 digits, **except**:
-* `evaluesc370`: for even `l >= 6` the first type-II root (`Re ~ 321`, `Im > 1500`) is stored inside
-  the type-I sequence (the table is sorted by `Re`), shifting later entries by one, i.e. entries
-  `(6,100), (8,99), ..., (24,91)` are not type-I modes; and `ww[100,25]` is off by `1.7e-4`.
-* `evaluesc2`: the odd-`l` `n = 0` entries are not roots of `A_l`, and many `l >= 20` entries are
-  accurate to only 47-49 digits.
-* `evaluesc100`: `(20, 75)` is accurate to 49 digits.
-
 ## Validation status
 
 * Eigenvalues: all 25,000 stored legacy roots verified; solver reproduces them (`pytest -m slow`).

@@ -13,7 +13,7 @@ Alfvén-wave magnetosphere, solved as an initial value problem.
 
 This package replaces the original Mathematica notebooks, archived at
 <https://github.com/AstroJoeBretz/QPO-Project>. See [`docs/theory.md`](docs/theory.md) for the
-equation-to-code map, the discrepancies found between notebooks, and what is not yet ported.
+equation-to-code map and what is not yet ported.
 
 ## Reference
 
@@ -64,8 +64,4 @@ spec = mode_spectrum(sol)          # frequency [Hz], decay rate [1/s], amplitude
 
 The original notebooks and the Mathematica-computed eigenvalue tables are archived (read-only) at
 <https://github.com/AstroJoeBretz/QPO-Project>. They are not needed to use this package;
-`docs/theory.md` records the discrepancies and defects found when porting them.
-
-A few older items recovered from a failed laptop are not published anywhere: `ExtraModes.nb`
-(type-II mode finder), `SurprisePoles.nb` (pole scans for exterior speed ratios c2 < 1) and 2016
-power-spectrum data from an earlier version of the model. They are kept locally by the author.
+`docs/theory.md` records the equation-tod-code map.
