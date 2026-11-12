@@ -28,23 +28,25 @@ def angular_weights(sol: IVPSolution) -> dict[int, float]:
     }
 
 
-def alfven_luminosity(sol: IVPSolution, r: float, t, ls: list[int] | None = None) -> np.ndarray:
+def alfven_luminosity(sol: IVPSolution, r: float, t, ls: list[int] | None = None,
+                      general_time: bool = False, **solver_kw) -> np.ndarray:
     """Outward power P(r, t) in units of ``mu1 R*^2 / t_unit * amplitude^2`` (unit-field form)."""
     t = np.atleast_1d(np.asarray(t, dtype=float))
-    mu = float(sol.table.params.mu2 if r > float(sol.table.params.Rs) else sol.table.params.mu1)
+    # the radial derivative is taken on the exterior side for r >= R*, so mu2 applies at r = R*
+    mu = float(sol.table.params.mu2 if r >= float(sol.table.params.Rs) else sol.table.params.mu1)
     S = angular_weights(sol)
     P = np.zeros_like(t)
     for l in ls if ls is not None else sol.ls:
-        F, dF, dt = sol.modes[l].F_with_derivatives(r, t)
+        F, dF, dt = sol.radial(l, general_time, **solver_kw).F_with_derivatives(r, t)
         P -= mu * r * l * (l + 1) * S[l] * dt * (r * dF - F)
     return P
 
 
 def escaped_energy_fraction(sol: IVPSolution, r: float, t, ls: list[int] | None = None,
-                            ) -> np.ndarray:
+                            general_time: bool = False, **solver_kw) -> np.ndarray:
     """``E(t)/E0``: time integral of the luminosity through radius ``r`` over the initial energy."""
     t = np.atleast_1d(np.asarray(t, dtype=float))
-    P = alfven_luminosity(sol, r, t, ls)
+    P = alfven_luminosity(sol, r, t, ls, general_time, **solver_kw)
     E0 = strain_energy(sol.ic, float(sol.table.params.mu_ratio))
     cum = np.concatenate([[0.0], np.cumsum(0.5 * (P[1:] + P[:-1]) * np.diff(t))])
     return cum / E0

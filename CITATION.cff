@@ -16,5 +16,10 @@ references:
       - family-names: Link
         given-names: Bennett
     journal: "Monthly Notices of the Royal Astronomical Society"
+    year: 2021
+    month: 7
+    volume: 504
+    issue: 4
+    start: 5880
+    end: 5898
     doi: "10.1093/mnras/stab1220"
-    # TODO: add year, volume and pages

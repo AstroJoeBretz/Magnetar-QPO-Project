@@ -32,6 +32,7 @@ class IVPSolution:
     coeffs: dict[tuple[int, int], complex]
     amplitude: float = 1.0
     scales: PhysicalScales = field(default_factory=PhysicalScales)
+    general_cache: dict = field(default_factory=dict, repr=False)
 
     @property
     def ls(self) -> list[int]:
@@ -41,25 +42,45 @@ class IVPSolution:
         """Rescale so that the initial strain energy is ``E_erg`` (``E_unit = mu1 R*^3``)."""
         eps = strain_energy(self.ic, float(self.table.params.mu_ratio))
         a = amplitude_for_energy(E_erg, eps, E_unit_erg)
-        return IVPSolution(self.ic, self.table, self.modes, self.coeffs, a, self.scales)
+        return IVPSolution(self.ic, self.table, self.modes, self.coeffs, a, self.scales,
+                           self.general_cache)
+
+    def radial(self, l: int, general_time: bool = False, **solver_kw):
+        """Radial function object for order ``l`` (``.F`` and ``.F_with_derivatives``).
+
+        ``general_time=False`` is the late-time residue sum; ``True`` is the pole-subtracted
+        solution valid at all ``t > 0`` (built once per ``l`` and cached; ``solver_kw`` are
+        passed to :class:`magnetar_qpo.transient.GeneralTimeSolver`).
+        """
+        if not general_time:
+            return self.modes[l]
+        key = (l, tuple(sorted(solver_kw.items())))
+        if key not in self.general_cache:
+            from .transient import GeneralTimeSolver
+
+            self.general_cache[key] = GeneralTimeSolver(
+                self.ic, self.table, l, modes=self.modes[l], **solver_kw)
+        return self.general_cache[key]
 
     # ---- fields ---------------------------------------------------------------------
-    def displacement(self, r: float, theta: float, phi: float, t) -> tuple[np.ndarray, np.ndarray]:
+    def displacement(self, r: float, theta: float, phi: float, t, general_time: bool = False,
+                     **solver_kw) -> tuple[np.ndarray, np.ndarray]:
         """(u_theta, u_phi) in units of R* at one point for an array of times."""
         t = np.atleast_1d(np.asarray(t, dtype=float))
         ut = np.zeros_like(t)
         up = np.zeros_like(t)
         for l in self.ls:
             G, H = G_H(self.coeffs, l, np.array([theta]), np.array([phi]))
-            F = self.modes[l].F(r, t).real
+            F = self.radial(l, general_time, **solver_kw).F(r, t).real
             up += F * G[0]
             ut += F * H[0]
         return self.amplitude * ut, self.amplitude * up
 
-    def probe_displacement(self, t) -> np.ndarray:
+    def probe_displacement(self, t, general_time: bool = False, **solver_kw) -> np.ndarray:
         """u_phi at the surface probe point (paper Sec. 4) as a function of time."""
         th, ph = self.ic.probe_point()
-        return self.displacement(float(self.table.params.Rs), th, ph, t)[1]
+        return self.displacement(float(self.table.params.Rs), th, ph, t, general_time,
+                                 **solver_kw)[1]
 
 
 def solve_ivp(

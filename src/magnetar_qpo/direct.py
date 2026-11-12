@@ -20,18 +20,28 @@ from .special_np import A_real_axis, exterior_standing_wave, sph_j
 
 
 def abar_real(ic: InitialCondition, l: int, w: np.ndarray, params: ModelParams,
-              r_max: float | None = None, n_nodes: int = 800) -> np.ndarray:
-    Rs, c1 = float(params.Rs), float(params.c1)
+              r_max: float | None = None, n_nodes: int | None = None) -> np.ndarray:
+    """Overlap ``abar(w)`` of the initial radial profile with the real standing wave.
+
+    ``n_nodes=None`` sizes the Gauss-Legendre rule of each segment from its own wave speed
+    (the exterior argument ``w r/c2`` is small, so far fewer nodes are needed there).
+    """
+    Rs, c1, c2 = float(params.Rs), float(params.c1), float(params.c2)
     rho1, rho2 = float(params.mu1 / params.c1**2), float(params.mu2 / params.c2**2)
     lo = max(1e-6, ic.r0 - 12 * ic.sigma_r)
     hi = ic.r0 + 12 * ic.sigma_r if r_max is None else r_max
+    wmax = float(np.max(w))
     out = np.zeros(len(w))
     if lo < Rs:
-        r, wt = _gl(lo, min(Rs, hi), n_nodes)
+        top = min(Rs, hi)
+        n = n_nodes or int(np.clip(150 + 3 * wmax / c1 * (top - lo), 400, 6000))
+        r, wt = _gl(lo, top, n)
         f = ic.fr(r) * r**2 * wt
         out += rho1 * (sph_j(l, w[:, None] * r[None, :] / c1).real * f[None, :]).sum(axis=1)
     if hi > Rs:
-        r, wt = _gl(max(lo, Rs), hi, n_nodes)
+        bot = max(lo, Rs)
+        n = n_nodes or int(np.clip(150 + 3 * wmax / c2 * (hi - bot), 400, 6000))
+        r, wt = _gl(bot, hi, n)
         f = ic.fr(r) * r**2 * wt
         out += rho2 * (exterior_standing_wave(l, w, r, params) * f[None, :]).sum(axis=1)
     return out

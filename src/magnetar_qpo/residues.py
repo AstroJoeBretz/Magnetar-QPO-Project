@@ -44,12 +44,23 @@ class RadialModes:
     K: np.ndarray  # complex128, residue weights (see module docstring)
     params: ModelParams
     kind: np.ndarray  # "I" / "II" label per pole
+    re_lo: np.ndarray | None = None  # Re(omega) - float(Re(omega)), for double-double accuracy
+
+    def profile(self, r: float) -> np.ndarray:
+        """Eigenfunction of each pole at ``r`` relative to its surface value ``j_l(z*)``.
+
+        ``h2_l(w r/c2)/h2_l(w R/c2)`` outside the star and ``j_l(w r/c1)/j_l(w R/c1)`` inside
+        (the interior profile is entire, so there is no divergence at the origin).
+        """
+        Rs = float(self.params.Rs)
+        if r >= Rs:
+            return h2_ratio(self.l, self.omega, r, Rs, float(self.params.c2))
+        return j_ratio(self.l, self.omega, r, Rs, float(self.params.c1))
 
     def F(self, r: float, t) -> np.ndarray:
-        """Late-time radial function ``F_l(r, t)`` at ``r >= R*`` for an array of times."""
+        """Late-time radial function ``F_l(r, t)`` for an array of times."""
         t = np.atleast_1d(np.asarray(t, dtype=float))
-        c2, Rs = float(self.params.c2), float(self.params.Rs)
-        coeff = self.K * h2_ratio(self.l, self.omega, r, Rs, c2)
+        coeff = self.K * self.profile(r)
         return np.exp(1j * np.outer(t, self.omega)) @ coeff
 
     def F_with_derivatives(self, r: float, t) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -62,9 +73,8 @@ class RadialModes:
         return (E @ a).real, (E @ da).real, (E @ (1j * self.omega * a)).real
 
     def coefficients_at(self, r: float) -> np.ndarray:
-        """Per-pole amplitudes at radius ``r``: ``K_k h2(w_k r/c2)/h2(w_k R/c2)``."""
-        return self.K * h2_ratio(self.l, self.omega, r, float(self.params.Rs),
-                                 float(self.params.c2))
+        """Per-pole amplitudes at radius ``r``: ``K_k`` times the relative eigenfunction."""
+        return self.K * self.profile(r)
 
 
 def radial_overlap_Q(
@@ -125,6 +135,7 @@ def build_modes(
         poles += [m for m, _ in mirrors]
         kinds += [k for _, k in mirrors]
     omega = np.array([complex(w) for w in poles])
+    re_lo = np.array([float(w.real - float(w.real)) for w in poles])
     # D'(omega_k) in multiprecision, then cast
     with mp.workdps(40):
         dD = np.array([complex(D_and_dD(l, w, params)[1]) for w in poles])
@@ -132,4 +143,4 @@ def build_modes(
     xs = omega * float(params.Rs / params.c2)
     c2mu2 = float(P.c2 * P.mu2)
     K = omega**2 * Q / (c2mu2 * l * (l + 1) * xs * dD)
-    return RadialModes(l, omega, K, params, np.array(kinds))
+    return RadialModes(l, omega, K, params, np.array(kinds), re_lo)

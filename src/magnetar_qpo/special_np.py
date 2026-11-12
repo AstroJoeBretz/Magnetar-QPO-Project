@@ -81,12 +81,13 @@ def j_ratio(l: int, w, r, Rs: float, c1: float):
     return scaled * np.exp(np.abs(zs.imag) * (r / Rs - 1.0) * Rs / Rs)
 
 
-def exterior_standing_wave(l: int, w, r, params) -> np.ndarray:
-    """Exterior radial function ``w_>(r) = Re[A h1(w r/c2)]`` at real ``w`` (broadcasting w, r).
+def alpha_beta_real(l: int, w, params):
+    """Real coefficients with ``w_>(r) = alpha j_l(w r/c2) + beta y_l(w r/c2)`` at real ``w``.
 
-    Evaluated by solving the two boundary conditions in the real basis ``(j_l, y_l)``:
-    ``w_> = alpha j_l + beta y_l`` with value ``j_l(z*)`` and traction ``(mu1/mu2) P_j(z*)`` at
-    the surface.  Unlike ``Re[A h1]`` this has no catastrophic cancellation at small ``w``.
+    Obtained by solving the two boundary conditions in the real basis ``(j_l, y_l)``: value
+    ``j_l(z*)`` and traction ``(mu1/mu2) P_j(z*)`` at the surface.  Here ``alpha = Re A`` and
+    ``beta = -Im A``, so ``|A|^2 = alpha^2 + beta^2``; unlike ``Re[A h1]`` this has no
+    catastrophic cancellation at small ``w``.
     """
     c1, c2, mu1, mu2, Rs = (float(v) for v in (params.c1, params.c2, params.mu1, params.mu2,
                                                params.Rs))
@@ -102,11 +103,31 @@ def exterior_standing_wave(l: int, w, r, params) -> np.ndarray:
     det = jx * Pyx - yx * Pjx
     alpha = (jz * Pyx - yx * m * Pz) / det
     beta = (jx * m * Pz - Pjx * jz) / det
+    return alpha, beta
+
+
+def abs_A2_real(l: int, w, params) -> np.ndarray:
+    """``|A_l(omega)|^2`` at real ``omega`` (double precision, ``alpha^2 + beta^2``)."""
+    alpha, beta = alpha_beta_real(l, w, params)
+    return alpha**2 + beta**2
+
+
+def exterior_standing_wave(l: int, w, r, params, derivative: bool = False) -> np.ndarray:
+    """Exterior radial function ``w_>(r) = Re[A h1(w r/c2)]`` at real ``w`` (broadcasting w, r).
+
+    With ``derivative=True`` returns ``d w_>/dr`` instead.
+    """
+    c2 = float(params.c2)
+    w = np.asarray(w, dtype=float)
+    alpha, beta = alpha_beta_real(l, w, params)
     r = np.asarray(r, dtype=float)
     xr = np.asarray(w)[..., None] * r / c2 if np.ndim(r) else w * r / c2
     a = alpha[..., None] if np.ndim(r) else alpha
     b = beta[..., None] if np.ndim(r) else beta
-    return a * spherical_jn(l, xr) + b * spherical_yn(l, xr)
+    if not derivative:
+        return a * spherical_jn(l, xr) + b * spherical_yn(l, xr)
+    k = (np.asarray(w)[..., None] if np.ndim(r) else w) / c2
+    return k * (a * spherical_jn(l, xr, derivative=True) + b * spherical_yn(l, xr, derivative=True))
 
 
 def A_real_axis(l: int, w, params) -> np.ndarray:

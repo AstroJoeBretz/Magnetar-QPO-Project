@@ -77,3 +77,18 @@ def test_luminosity_matches_direct_derivatives(strongly_coupled):
         Fr = (-3 * f0 + 4 * f1 - f2) / (2 * hr)
         P_dir -= float(p.mu2) * l * (l + 1) * S[l] * Ft * (Fr - f0)
     assert np.abs(P_res - P_dir).max() < 2e-3 * np.abs(P_dir).max()
+
+
+def test_luminosity_is_continuous_across_the_surface():
+    """Power through r = R* equals the limit r -> R*+ (guards the mu1/mu2 choice at the surface)."""
+    from magnetar_qpo.luminosity import alfven_luminosity
+    from magnetar_qpo.solution import solve_ivp
+
+    p = ModelParams.make(5, "1/4")  # mu2 != mu1
+    tab = solve_table(p, lmax=3, nmax=40)
+    sol = solve_ivp(InitialCondition(0.7), tab, lmax=3, lmin=2, nmax=40)
+    t = np.array([3.0, 5.0, 9.0])
+    P0 = alfven_luminosity(sol, 1.0, t)
+    P1 = alfven_luminosity(sol, 1.0 + 1e-7, t)
+    assert np.abs(P0).max() > 0
+    assert np.abs(P0 - P1).max() < 1e-4 * np.abs(P0).max()
