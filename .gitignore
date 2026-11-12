@@ -1,0 +1,15 @@
+# Paper files are cited by DOI/arXiv, not redistributed
+MNRAS_paper_files/
+
+# Legacy Mathematica notebooks and 2016 data, kept locally only
+archived_code/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+build/
+dist/

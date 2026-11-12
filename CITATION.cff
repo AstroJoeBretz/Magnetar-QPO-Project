@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "magnetar-qpo"
+type: software
+authors:
+  - family-names: Bretz
+    given-names: Joseph
+references:
+  - type: article
+    title: "Tangled magnetic field model of QPOs"
+    authors:
+      - family-names: Bretz
+        given-names: Joseph
+      - family-names: van Eysden
+        given-names: C. A.
+      - family-names: Link
+        given-names: Bennett
+    journal: "Monthly Notices of the Royal Astronomical Society"
+    doi: "10.1093/mnras/stab1220"
+    # TODO: add year, volume and pages
