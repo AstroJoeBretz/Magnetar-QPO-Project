@@ -18,7 +18,7 @@ equation-to-code map, the discrepancies found between notebooks, and what is not
 ## Reference
 
 Bretz, J., van Eysden, C. A., & Link, B., *Tangled magnetic field model of QPOs*, Monthly Notices
-of the Royal Astronomical Society (`CITATION.cff`; the DOI still needs to be filled in).
+of the Royal Astronomical Society, <https://doi.org/10.1093/mnras/stab1220> (see `CITATION.cff`).
 
 ## Install and test
 
