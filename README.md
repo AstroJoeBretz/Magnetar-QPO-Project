@@ -64,4 +64,4 @@ spec = mode_spectrum(sol)          # frequency [Hz], decay rate [1/s], amplitude
 
 The original notebooks and the Mathematica-computed eigenvalue tables are archived (read-only) at
 <https://github.com/AstroJoeBretz/QPO-Project>. They are not needed to use this package;
-`docs/theory.md` records the equation-tod-code map.
+`docs/theory.md` records the equation-to-code map.
